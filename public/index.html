@@ -103,7 +103,7 @@
                     What if your clothing budget ended? You will get an alert. The goal is to never go over the budget.
                 </p>
             </article>
-
+            
             <article class="text-box">
                 <!-- This is a semantic html change -->
                 <header>
@@ -122,14 +122,19 @@
                 <header>
                     <!-- This is an A11y Change -->
                     <h2>Chart</h2>
+                </header>
                 <p>
                     <canvas id="myChart" width="400" height="400"></canvas>
                 </p>
             </article>
-            </div>
 
-        </div>
-
+            <article class="text-box">
+                <h2>D3JS Chart</h2>
+                <p>
+                    <div class="D3JSChart"></div>
+                </p>
+            </article>
+        </section>
     </main>
     <!-- This is a A11y html change -->
     <footer class="bottom">
@@ -139,21 +144,25 @@
     </footer>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.5.0/axios.min.js" integrity="sha512-aoTNnqZcT8B4AmeCFmiSnDlc4Nj/KPaZyB5G7JnOnUEkdNpCZs1LCankiYi01sLTyWy+m2P+W4XM+BuQ3Q4/Dg==" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <script>
         var dataSource = {
-                datasets: [
-                    {
-                        data: [],
-                        backgroundColor: [
-                            '#ffcd56',
-                            '#ff6384',
-                            '#36a2eb',
-                            '#fd6b19',
-                        ]
-                    }
-                ],
-                labels: []
-            };
+            datasets: [
+                {
+                    data: [],
+                    backgroundColor: [
+                        '#ffcd56',
+                        '#ff6384',
+                        '#36a2eb',
+                        '#fd6b19',
+                        '#ff5733',
+                        '#117a65',
+                        '#9b59b6'
+                    ]
+                }
+            ],
+            labels: []
+        };
 
         function createChart() {
             var ctx = document.getElementById('myChart').getContext('2d');
@@ -163,6 +172,53 @@
             });
         }
 
+  function D3Chart() {
+        
+        const w = 350;
+        const h = 300;
+        const r = Math.min(w, h) / 2;
+
+            
+        const color = d3.scaleOrdinal()
+            .domain(dataSource.labels)
+            .range(dataSource.datasets[0].backgroundColor); 
+
+        
+        const svg = d3.select(".D3JSChart")
+            .append("svg")
+            .attr("width", w)
+            .attr("height", h)
+            .append("g")
+            .attr("transform", `translate(${w / 2},${h / 2})`);
+
+            
+        const pie = d3.pie()
+            .value(d => d);
+
+        
+        const arc = d3.arc()
+            .innerRadius(r - 50) 
+            .outerRadius(r);
+
+        
+        const arcs = svg.selectAll("arc")
+            .data(pie(dataSource.datasets[0].data))
+            .enter()
+            .append("g")
+            .attr("class", "arc");
+
+        
+        arcs.append("path")
+            .attr("d", arc)
+            .attr("fill", (d, i) => color(i)); 
+
+        
+        arcs.append("text")
+            .attr("transform", d => `translate(${arc.centroid(d)})`)
+            .attr("text-anchor", "middle")
+            .text((d, i) => dataSource.labels[i]);
+        }
+
         function getBudget() {
             axios.get('http://localhost:3000/budget')
             .then(function (res) {
@@ -170,6 +226,7 @@
                     dataSource.datasets[0].data[i] = res.data.myBudget[i].budget;
                     dataSource.labels[i] = res.data.myBudget[i].title;
                 }
+                D3Chart();
                 createChart();
             });
         }
